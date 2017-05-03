@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:orientation="horizontal"
+    android:id="@+id/ln"
+    android:background="@drawable/recycler_bg"
+    >
+
+    <TextView
+        android:layout_marginLeft="25dp"
+        android:id="@+id/content"
+        android:layout_width="0dp"
+        android:textSize="16sp"
+        android:layout_height="wrap_content"
+        android:text="content"
+        android:textColor="#000"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="5" />
+
+    <TextView
+        android:id="@+id/last_time"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:layout_marginRight="10dp"
+        android:layout_weight="1.2"
+        android:textColor="#808080"
+        android:layout_gravity="center_vertical"
+        android:text="time"
+        />
+
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:visibility="gone"
+        />
+</LinearLayout>

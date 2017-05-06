@@ -52,7 +52,7 @@ public class Activity_search extends AppCompatActivity implements MaterialSearch
                 ;
                 String input = searchBar.getText().toString();
                 Log.d("AAA", input);
-                db = openOrCreateDatabase("MyNote", MODE_PRIVATE, null);
+                db = openOrCreateDatabase("NoteBook", MODE_PRIVATE, null);
                 Cursor cursor = db.rawQuery("select * from info where content ='" + input + "'", null);
                 contents.clear();
                 times.clear();

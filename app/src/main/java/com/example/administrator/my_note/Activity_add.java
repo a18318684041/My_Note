@@ -1,7 +1,11 @@
 package com.example.administrator.my_note;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -20,6 +25,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
+
+import jp.wasabeef.richeditor.RichEditor;
 
 public class Activity_add extends AppCompatActivity {
 
@@ -45,6 +52,11 @@ public class Activity_add extends AppCompatActivity {
     private LinearLayout take_photo;
     private  LinearLayout share;
     private ImageView img_share;
+
+
+    //图片文字编辑框
+    private RichEditor mEditor;
+    private String HTML;//图文编辑框的内容
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,10 +90,21 @@ public class Activity_add extends AppCompatActivity {
                 startActivityForResult(intent, 1);
             }
         });
+        //选择图片
+        photo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //调用系统的照相机
+                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, 1001);
+            }
+        });
     }
 
     private void initDatabase() {
-        db = openOrCreateDatabase("MyNote",MODE_PRIVATE,null);
+        //打开数据库
+        //db = openOrCreateDatabase("MyNote",MODE_PRIVATE,null);
+        db = openOrCreateDatabase("NoteBook",MODE_PRIVATE,null);
     }
 
     private void initView() {
@@ -96,7 +119,23 @@ public class Activity_add extends AppCompatActivity {
         tv_time = (TextView) findViewById(R.id.time);
         //获取当前创建的时间,并且设置在输入框的顶部
         NowTime();
-        edt_content = (EditText) findViewById(R.id.edt_content);
+        //edt_content = (EditText) findViewById(R.id.edt_content);
+        //图文编辑框的初始化
+        mEditor = (RichEditor) findViewById(R.id.editor);
+        mEditor.setEditorHeight(200);//起始编辑设置高度
+        mEditor.setEditorFontSize(22);//设置字体大小
+        mEditor.setEditorFontColor(Color.RED);//设置字体颜色
+        mEditor.setBold();//设置粗体
+        mEditor.setItalic();//设置斜体
+        //文字变化的监听
+        mEditor.setOnTextChangeListener(new RichEditor.OnTextChangeListener() {
+            @Override
+            public void onTextChange(String text) {
+                Log.d("AAA", text);//在这里存储
+                HTML = text;
+            }
+        });
+
         tv_finish = (TextView) findViewById(R.id.btn_finish);
         tv_finish.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,9 +150,9 @@ public class Activity_add extends AppCompatActivity {
                 int second = time.second;
                 last_time = (month+1) + "月"+day+"日";
                 //获取到最后修改的时间
-                content = edt_content.getText().toString();//获取到便签的内容
+                //content = edt_content.getText().toString();//获取到便签的内容
                 Intent intent = new Intent(Activity_add.this,MainActivity.class);
-                db.execSQL("insert into info(first_time,last_time,content) values('"+first_time+"','"+last_time+"','"+content+"')");
+                db.execSQL("insert into info(first_time,last_time,content) values('"+first_time+"','"+last_time+"','"+HTML+"')");
                 db.close();
                 startActivity(intent);
             }
@@ -130,5 +169,29 @@ public class Activity_add extends AppCompatActivity {
         int second = time.second;
         tv_time.setText(year+"-"+(month+1)+"-"+day);
         first_time = year+"-"+(month+1)+"-"+day;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(data!=null){
+            if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
+                Uri selectedImage = data.getData();
+                String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                Cursor cursor = getContentResolver().query(selectedImage,
+                        filePathColumn, null, null, null);
+                cursor.moveToFirst();
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                final String picturePath = cursor.getString(columnIndex);
+                cursor.close();
+                Log.d("AAA", picturePath);
+                //自动获取输入焦点
+                mEditor.requestFocus();
+                mEditor.requestFocusFromTouch();
+                mEditor.insertImage(picturePath, "image");
+                Log.d("AAA", "onActivityResult: "+mEditor.getHtml());
+            }
+        }
     }
 }

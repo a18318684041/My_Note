@@ -35,10 +35,41 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
     private TextView tv_cancel;
 
     private MaterialSearchBar searchBar;//搜索栏
+    private Button  btn_trash;
+
+    private SQLiteDatabase db_trash;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        db = openOrCreateDatabase("NoteBook",MODE_PRIVATE,null);
+        db.execSQL("CREATE TABLE IF NOT EXISTS info (first_time varchar(10), last_time varchar(10), content varchar(50))");
+        //创建一个垃圾箱的数据表
+        db_trash = openOrCreateDatabase("Rubish",MODE_PRIVATE,null);
+        db_trash.execSQL("CREATE TABLE IF NOT EXISTS trash (content varchar(50))");
+        Cursor cursor = db.rawQuery("select * from info",null);
+        contents.clear();
+        times.clear();
+        if(cursor!=null){
+            while(cursor.moveToNext()){
+                String content1 = cursor.getString(cursor.getColumnIndex("content"));
+                String first_time = cursor.getString(cursor.getColumnIndex("first_time"));
+                contents.add(content1);
+                times.add(first_time);
+                Log.d("AAA", "onResume: "+content1);
+            }
+            cursor.close();
+            db.close();
+            recyleview = (RecyclerView) findViewById(R.id.recyleview);
+            adpter = new Myadpter(contents, times, MainActivity.this);
+            LinearLayoutManager manger = new LinearLayoutManager(MainActivity.this);
+            recyleview.setLayoutManager(manger);
+            //绘制分割线
+            recyleview.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
+            recyleview.setAdapter(adpter);
+        }
         initView();
         //初始化搜索栏
         initSearch();
@@ -47,6 +78,18 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
     private void initSearch() {
         searchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
         searchBar.setOnSearchActionListener(this);
+
+
+
+        //跳转进垃圾箱
+        btn_trash = (Button) findViewById(R.id.btn_trash);
+        btn_trash.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,Activity_trash.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void initView() {
@@ -66,13 +109,14 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
             public void onClick(View v) {
                /* db.execSQL("delete from info content ='你好1'" );*/
                 List<String> a = adpter.del_content();
-                db = openOrCreateDatabase("MyNote",MODE_PRIVATE,null);;
+                db = openOrCreateDatabase("NoteBook",MODE_PRIVATE,null);;
                 db.execSQL("CREATE TABLE IF NOT EXISTS info (first_time varchar(10), last_time varchar(10), content varchar(50))");
-                Log.d("AAA", a.size()+"'");
                 for(int i = 0;i<a.size();i++){
                     Log.d("AAA","delete from info where content ='"+a.get(i)+"'");
+                    db_trash.execSQL("insert into trash(content) values('"+a.get(i)+"')");
                     db.execSQL("delete from info where content = ?",new String[]{a.get(i)});
                 }
+                db_trash.close();
                 Cursor cursor = db.rawQuery("select * from info",null);
                 List<String> con = new ArrayList<String>();
                 List<String> first = new ArrayList<String>();
@@ -98,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
                     adpter.setCheck(false);
                     adpter.notifyDataSetChanged();
                     btn_del.setVisibility(View.GONE);
+                    btn_trash.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -113,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
                 adpter.setCheck(true);
                 adpter.notifyDataSetChanged();
                 btn_del.setVisibility(View.VISIBLE);
+                btn_trash.setVisibility(View.GONE);
 
             }
         });
@@ -125,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
                 adpter.setCheck(false);
                 adpter.notifyDataSetChanged();
                 btn_del.setVisibility(View.GONE);
+                btn_trash.setVisibility(View.VISIBLE);
             }
         });
 
@@ -134,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
     protected void onResume() {
         super.onResume();
 
-        db = openOrCreateDatabase("MyNote",MODE_PRIVATE,null);;
+/*     db = openOrCreateDatabase("NoteBook",MODE_PRIVATE,null);;
         db.execSQL("CREATE TABLE IF NOT EXISTS info (first_time varchar(10), last_time varchar(10), content varchar(50))");
         Cursor cursor = db.rawQuery("select * from info",null);
         contents.clear();
@@ -145,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
                 String first_time = cursor.getString(cursor.getColumnIndex("first_time"));
                 contents.add(content1);
                 times.add(first_time);
+                Log.d("AAA", "onResume: "+content1);
             }
             cursor.close();
             db.close();
@@ -155,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements MaterialSearchBar
             //绘制分割线
             recyleview.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
             recyleview.setAdapter(adpter);
-        }
+        }*/
     }
 
     @Override
